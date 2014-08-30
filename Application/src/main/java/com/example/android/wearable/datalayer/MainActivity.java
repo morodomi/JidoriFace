@@ -63,6 +63,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -116,6 +118,8 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     private ScheduledFuture<?> mDataItemGeneratorFuture;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    private Timer mTimer;
 
     @Override
     public void onCreate(Bundle b) {
@@ -459,13 +463,16 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     }
 
     public void onTakePhotoClick(View view) {
-        TwitterImage twitterImage = new TwitterImage(this);
-        twitterImage.getImage();
+        if (mTimer == null) {
+            mTimer = new Timer();
+            mTimer.schedule(new TwitterImageTask(), 0, 5000);
+        }
     }
 
     public void onSendPhotoClick(View view) {
-        if (null != mImageBitmap && mGoogleApiClient.isConnected()) {
-            sendPhoto(toAsset(mImageBitmap));
+        if (mTimer != null) {
+            mTimer.cancel();
+            mTimer = null;
         }
     }
 
@@ -489,6 +496,21 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     private static void LOGD(final String tag, String message) {
         if (Log.isLoggable(tag, Log.DEBUG)) {
             Log.d(tag, message);
+        }
+    }
+
+    public class TwitterImageTask extends TimerTask {
+        public TwitterImage twitterImage;
+
+        public TwitterImageTask() {
+            twitterImage = new TwitterImage(MainActivity.this);
+        }
+
+        @Override
+        public void run() {
+            if(twitterImage != null) {
+                twitterImage.getImage();
+            }
         }
     }
 

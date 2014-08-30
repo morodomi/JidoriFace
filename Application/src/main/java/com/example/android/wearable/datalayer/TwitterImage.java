@@ -2,6 +2,8 @@ package com.example.android.wearable.datalayer;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
+import android.graphics.Rect;
 import android.util.Log;
 
 import java.io.IOException;
@@ -44,7 +46,6 @@ public class TwitterImage {
     private OnReceiveTwitterImageListener listener = null;
 
     private String queryString = "%23%E3%82%B0%E3%83%A9%E3%83%89%E3%83%AB%E8%87%AA%E6%92%AE%E3%82%8A%E9%83%A8";
-    private int numberOfTweet = 10;
     private String extension = ".jpg";
 
     /**
@@ -65,16 +66,35 @@ public class TwitterImage {
             @Override
             public void run() {
                 try {
-                    String imageUrl = getImageUrl();
+                    int width = 0, height = 0;
+                    String imageUrl = "";
+                    while(width < 600 || height < 600) {
+                        imageUrl = getImageUrl();
+                        HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
+                        connection.setDoInput(true);
+                        connection.connect();
+                        InputStream is = connection.getInputStream();
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = true;
+                        BitmapFactory.decodeStream(is, null, options);
+                        width = options.outWidth;
+                        height = options.outHeight;
+                    }
+                    Log.d("JIDORIBU", "URL:" + imageUrl + " 画像サイズ h:" + height + "  w:" + width);
                     HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
                     connection.setDoInput(true);
                     connection.connect();
-                    InputStream input = connection.getInputStream();
-                    Bitmap bitmap = BitmapFactory.decodeStream(input);
+                    InputStream is = connection.getInputStream();
+                    BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(is, true);
+                    Rect rect = new Rect(0, 0, 600, 600);
+                    Bitmap bitmap = decoder.decodeRegion(rect, new BitmapFactory.Options());
                     listener.onReceiveTwitterImage(bitmap);
                 } catch (TwitterException e) {
+                    Log.d("JIDORIBU", e.getMessage(), e);
                 } catch (MalformedURLException e) {
+                    Log.d("JIDORIBU", e.getMessage(), e);
                 } catch (IOException e) {
+                    Log.d("JIDORIBU", e.getMessage(), e);
                 }
             }
         }).start();
@@ -107,6 +127,7 @@ public class TwitterImage {
                 }
             }
         }
+        Log.d("JIDORIBU", "SINCE:" + result.getSinceId() + " MAX:" + result.getMaxId());
         // ランダム
         return urls.get(new Random().nextInt(urls.size()));
     }
