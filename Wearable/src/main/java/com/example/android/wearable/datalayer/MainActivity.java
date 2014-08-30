@@ -19,7 +19,10 @@ package com.example.android.wearable.datalayer;
 import static com.example.android.wearable.datalayer.DataLayerListenerService.LOGD;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -81,21 +84,42 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        LOGD(TAG, "registerReceiver()");
+        registerReceiver(mActionReceiver, localIntentFilter);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        LOGD(TAG, "onResume()");
+
         mGoogleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        LOGD(TAG, "onPause()");
+
         Wearable.DataApi.removeListener(mGoogleApiClient, this);
         Wearable.MessageApi.removeListener(mGoogleApiClient, this);
         Wearable.NodeApi.removeListener(mGoogleApiClient, this);
         mGoogleApiClient.disconnect();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LOGD(TAG, "onDestroy()");
+
+        try {
+            LOGD(TAG, "unregisterReceiver()");
+            unregisterReceiver(mActionReceiver);
+        } catch (Exception e) {
+        }
+
     }
 
     @Override
@@ -227,4 +251,21 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
             this.text = text;
         }
     }
+
+    IntentFilter localIntentFilter = new IntentFilter("com.google.android.clockwork.home.action.BACKGROUND_ACTION");
+    private final BroadcastReceiver mActionReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent data) {
+            LOGD(TAG, "onReceive: " + data);
+            Bundle extras = data.getExtras();
+            for(String key : extras.keySet()) {
+                LOGD(TAG, key + " : " + extras.get(key));
+            }
+
+            if (data.hasExtra("ambient_mode")) {
+                boolean isAmbient = data.getBooleanExtra("ambient_mode", false);
+                LOGD(TAG, "Ambient: " + isAmbient);
+            }
+        }
+    };
+
 }
