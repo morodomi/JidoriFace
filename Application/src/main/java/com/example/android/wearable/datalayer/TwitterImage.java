@@ -45,7 +45,7 @@ public class TwitterImage {
 
     private OnReceiveTwitterImageListener listener = null;
 
-    private String queryString = "%23%E3%82%B0%E3%83%A9%E3%83%89%E3%83%AB%E8%87%AA%E6%92%AE%E3%82%8A%E9%83%A8";
+    private String queryString = "%23%E3%82%B0%E3%83%A9%E3%83%89%E3%83%AB%E8%87%AA%E6%92%AE%E3%82%8A%E9%83%A8"; // 自撮り部
     private String extension = ".jpg";
 
     /**
@@ -108,10 +108,10 @@ public class TwitterImage {
     private String getImageUrl() throws TwitterException, MalformedURLException, IOException {
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
-                .setOAuthConsumerKey("dlqiziQgwWOXqRlhCiXyPktwc")
-                .setOAuthConsumerSecret("kmgwbGddH6BNMWS5qww8WBDKPJVYQlqeFpSYxk4hMmZaYSdzzB")
-                .setOAuthAccessToken("386623809-wBzPmMYLMfsaotTEcwLzu06IJE4GbrLpYjA3kSBL")
-                .setOAuthAccessTokenSecret("2gpqiXfSQ8gNrYvkRArMS3iZj9dmWsZWKUYGvRD1LwtFo");
+                .setOAuthConsumerKey("******************************")
+                .setOAuthConsumerSecret("******************************")
+                .setOAuthAccessToken("******************************")
+                .setOAuthAccessTokenSecret("******************************");
         Twitter twitter = new TwitterFactory(cb.build()).getInstance();
         Query query = new Query();
         query.setQuery(queryString);
