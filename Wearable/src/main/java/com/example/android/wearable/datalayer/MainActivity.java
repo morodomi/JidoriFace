@@ -24,70 +24,35 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextClock;
 import android.widget.TextView;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.data.FreezableUtils;
-import com.google.android.gms.wearable.Asset;
-import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
-
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * Shows events and photo from the Wearable APIs.
  */
-public class MainActivity extends Activity implements ConnectionCallbacks,
-        OnConnectionFailedListener, DataApi.DataListener, MessageApi.MessageListener,
-        NodeApi.NodeListener {
+public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
-    private GoogleApiClient mGoogleApiClient;
     private TextView mIntroText;
     private View mLayout;
-    private Handler mHandler;
     private TextClock mClock;
 
     @Override
     public void onCreate(Bundle b) {
         super.onCreate(b);
-        mHandler = new Handler();
         LOGD(TAG, "onCreate");
         setContentView(R.layout.main_activity);
         mIntroText = (TextView) findViewById(R.id.intro);
         mLayout = findViewById(R.id.layout);
         mClock = (TextClock) findViewById(R.id.watch_time);
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
 
         LOGD(TAG, "registerReceiver()");
         registerReceiver(mActionReceiver, localIntentFilter);
@@ -98,8 +63,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     protected void onResume() {
         super.onResume();
         LOGD(TAG, "onResume()");
-
-        mGoogleApiClient.connect();
 
         mClock.setBackgroundColor(Color.argb(128, 0, 0, 0));
         final Bitmap bitmap = DataLayerListenerService.lastBitmap;
@@ -117,11 +80,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         super.onPause();
         LOGD(TAG, "onPause()");
 
-        Wearable.DataApi.removeListener(mGoogleApiClient, this);
-        Wearable.MessageApi.removeListener(mGoogleApiClient, this);
-        Wearable.NodeApi.removeListener(mGoogleApiClient, this);
-        mGoogleApiClient.disconnect();
-
         mClock.setBackgroundColor(Color.argb(0, 0, 0, 0));
         mLayout.setBackground(null);
     }
@@ -137,45 +95,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         } catch (Exception e) {
         }
 
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        LOGD(TAG, "onConnected(): Successfully connected to Google API client");
-        Wearable.DataApi.addListener(mGoogleApiClient, this);
-        Wearable.MessageApi.addListener(mGoogleApiClient, this);
-        Wearable.NodeApi.addListener(mGoogleApiClient, this);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        LOGD(TAG, "onConnectionSuspended(): Connection to Google API client was suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        Log.e(TAG, "onConnectionFailed(): Failed to connect, with result: " + result);
-    }
-
-    @Override
-    public void onDataChanged(DataEventBuffer dataEvents) {
-        LOGD(TAG, "onDataChanged(): " + dataEvents);
-
-        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
-        dataEvents.close();
-    }
-
-    @Override
-    public void onMessageReceived(MessageEvent event) {
-        LOGD(TAG, "onMessageReceived: " + event);
-    }
-
-    @Override
-    public void onPeerConnected(Node node) {
-    }
-
-    @Override
-    public void onPeerDisconnected(Node node) {
     }
 
     private static class DataItemAdapter extends ArrayAdapter<Event> {
