@@ -63,9 +63,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private static final String TAG = "MainActivity";
 
     private GoogleApiClient mGoogleApiClient;
-    private ListView mDataItemList;
     private TextView mIntroText;
-    private DataItemAdapter mDataItemListAdapter;
     private View mLayout;
     private Handler mHandler;
 
@@ -75,14 +73,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         mHandler = new Handler();
         LOGD(TAG, "onCreate");
         setContentView(R.layout.main_activity);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        mDataItemList = (ListView) findViewById(R.id.dataItem_list);
         mIntroText = (TextView) findViewById(R.id.intro);
         mLayout = findViewById(R.id.layout);
-
-        // Stores data events received by the local broadcaster.
-        mDataItemListAdapter = new DataItemAdapter(this, android.R.layout.simple_list_item_1);
-        mDataItemList.setAdapter(mDataItemListAdapter);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -124,16 +116,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Log.e(TAG, "onConnectionFailed(): Failed to connect, with result: " + result);
     }
 
-    private void generateEvent(final String title, final String text) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mIntroText.setVisibility(View.INVISIBLE);
-                mDataItemListAdapter.add(new Event(title, text));
-            }
-        });
-    }
-
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
         LOGD(TAG, "onDataChanged(): " + dataEvents);
@@ -152,21 +134,17 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                         @Override
                         public void run() {
                             Log.d(TAG, "Setting background image..");
+                            mIntroText.setVisibility(View.INVISIBLE);
                             mLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
                         }
                     });
 
-                } else if (DataLayerListenerService.COUNT_PATH.equals(path)) {
-                    LOGD(TAG, "Data Changed for COUNT_PATH");
-                    generateEvent("DataItem Changed", event.getDataItem().toString());
                 } else {
                     LOGD(TAG, "Unrecognized path: " + path);
                 }
 
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                generateEvent("DataItem Deleted", event.getDataItem().toString());
             } else {
-                generateEvent("Unknown data event type", "Type = " + event.getType());
             }
         }
     }
@@ -193,17 +171,14 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     @Override
     public void onMessageReceived(MessageEvent event) {
         LOGD(TAG, "onMessageReceived: " + event);
-        generateEvent("Message", event.toString());
     }
 
     @Override
     public void onPeerConnected(Node node) {
-        generateEvent("Node Connected", node.getId());
     }
 
     @Override
     public void onPeerDisconnected(Node node) {
-        generateEvent("Node Disconnected", node.getId());
     }
 
     private static class DataItemAdapter extends ArrayAdapter<Event> {

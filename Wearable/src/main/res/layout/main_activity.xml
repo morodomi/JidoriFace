@@ -18,22 +18,30 @@
     android:id="@+id/layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <TextView
+            android:id="@+id/intro"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_centerInParent="true"
+            android:textSize="20sp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:fontFamily="sans-serif-condensed-light"
+            android:text="@string/intro" />
 
-    <ListView
-        android:id="@+id/dataItem_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:transcriptMode="alwaysScroll"/>
-
-    <TextView
-        android:id="@+id/intro"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textSize="20sp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:gravity="center"
-        android:fontFamily="sans-serif-condensed-light"
-        android:text="@string/intro" />
+        <TextClock
+            android:id="@+id/watch_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:textAlignment="viewEnd"
+            android:textSize="24sp"
+            android:format24Hour="kk:mm"
+            android:format12Hour="kk:mm"/>
+    </FrameLayout>
 </RelativeLayout>
