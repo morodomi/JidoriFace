@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,6 +36,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextClock;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -69,6 +71,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private TextView mIntroText;
     private View mLayout;
     private Handler mHandler;
+    private TextClock mClock;
 
     @Override
     public void onCreate(Bundle b) {
@@ -78,6 +81,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         setContentView(R.layout.main_activity);
         mIntroText = (TextView) findViewById(R.id.intro);
         mLayout = findViewById(R.id.layout);
+        mClock = (TextClock) findViewById(R.id.watch_time);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -96,6 +100,16 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         LOGD(TAG, "onResume()");
 
         mGoogleApiClient.connect();
+
+        mClock.setBackgroundColor(Color.argb(128, 0, 0, 0));
+        final Bitmap bitmap = DataLayerListenerService.lastBitmap;
+        if(bitmap == null) {
+            mLayout.setBackground(null);
+            mIntroText.setVisibility(View.VISIBLE);
+        }else {
+            mLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+            mIntroText.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
@@ -107,6 +121,9 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Wearable.MessageApi.removeListener(mGoogleApiClient, this);
         Wearable.NodeApi.removeListener(mGoogleApiClient, this);
         mGoogleApiClient.disconnect();
+
+        mClock.setBackgroundColor(Color.argb(0, 0, 0, 0));
+        mLayout.setBackground(null);
     }
 
     @Override
@@ -146,50 +163,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
 
         final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
         dataEvents.close();
-        for (DataEvent event : events) {
-            if (event.getType() == DataEvent.TYPE_CHANGED) {
-                String path = event.getDataItem().getUri().getPath();
-                if (DataLayerListenerService.IMAGE_PATH.equals(path)) {
-                    DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                    Asset photo = dataMapItem.getDataMap()
-                            .getAsset(DataLayerListenerService.IMAGE_KEY);
-                    final Bitmap bitmap = loadBitmapFromAsset(mGoogleApiClient, photo);
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d(TAG, "Setting background image..");
-                            mIntroText.setVisibility(View.INVISIBLE);
-                            mLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
-                        }
-                    });
-
-                } else {
-                    LOGD(TAG, "Unrecognized path: " + path);
-                }
-
-            } else if (event.getType() == DataEvent.TYPE_DELETED) {
-            } else {
-            }
-        }
-    }
-
-    /**
-     * Extracts {@link android.graphics.Bitmap} data from the
-     * {@link com.google.android.gms.wearable.Asset}
-     */
-    private Bitmap loadBitmapFromAsset(GoogleApiClient apiClient, Asset asset) {
-        if (asset == null) {
-            throw new IllegalArgumentException("Asset must be non-null");
-        }
-
-        InputStream assetInputStream = Wearable.DataApi.getFdForAsset(
-                apiClient, asset).await().getInputStream();
-
-        if (assetInputStream == null) {
-            Log.w(TAG, "Requested an unknown Asset.");
-            return null;
-        }
-        return BitmapFactory.decodeStream(assetInputStream);
     }
 
     @Override
