@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import twitter4j.MediaEntity;
 import twitter4j.Query;
@@ -40,7 +43,7 @@ public class TwitterImage {
 
     private OnReceiveTwitterImageListener listener = null;
 
-    private String queryString = "#jidoribu";
+    private String queryString = "%23%E3%82%B0%E3%83%A9%E3%83%89%E3%83%AB%E8%87%AA%E6%92%AE%E3%82%8A%E9%83%A8";
     private int numberOfTweet = 10;
     private String extension = ".jpg";
 
@@ -63,7 +66,6 @@ public class TwitterImage {
             public void run() {
                 try {
                     String imageUrl = getImageUrl();
-                    Log.d("JIDORIBU", "image URL:" + imageUrl);
                     HttpURLConnection connection = (HttpURLConnection) new URL(imageUrl).openConnection();
                     connection.setDoInput(true);
                     connection.connect();
@@ -92,27 +94,20 @@ public class TwitterImage {
                 .setOAuthAccessTokenSecret("2gpqiXfSQ8gNrYvkRArMS3iZj9dmWsZWKUYGvRD1LwtFo");
         Twitter twitter = new TwitterFactory(cb.build()).getInstance();
         Query query = new Query();
-        query.setQuery("#自撮り部");
+        query.setQuery(queryString);
         query.setLang("ja");
         query.setCount(100);
         QueryResult result = twitter.search(query);
-        int favoriteCount = 0;
-        String resultUrl = "";
-        //ヒット数
-        Log.d("JIDORIBU", "HIT NUMBER: " + result.getTweets().size());
+        List<String> urls = new ArrayList<String>();
         for(Status sts : result.getTweets()) {
-            Log.d("JIDORIBU", "LOOP1");
-            Log.d("JIDORIBU", "Tweet" + sts.getText() + "FAV:" + sts.getFavoriteCount());
-            if (sts.getFavoriteCount() > favoriteCount) {
-                MediaEntity[] arrayMedia = sts.getMediaEntities();
-                for (MediaEntity media : arrayMedia) {
-                    if (media.getMediaURL().endsWith(extension)) {
-                        Log.d("JIDORIBU", "URL: " + media.getMediaURL());
-                        resultUrl = media.getMediaURL();
-                    }
+            MediaEntity[] arrayMedia = sts.getMediaEntities();
+            for (MediaEntity media : arrayMedia) {
+                if (media.getMediaURL().endsWith(extension)) {
+                    urls.add(media.getMediaURL());
                 }
             }
         }
-        return resultUrl;
+        // ランダム
+        return urls.get(new Random().nextInt(urls.size()));
     }
 }
