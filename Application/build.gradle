@@ -28,7 +28,6 @@ android {
 dependencies {
     compile 'com.google.android.gms:play-services:5.0.+@aar'
     compile "com.android.support:support-v4:20.0.+"
-    wearApp project(':Wearable')
-
     compile "org.twitter4j:twitter4j-core:3.0.4-SNAPSHOT" //mavenからDLする記述
+    wearApp project(':Wearable')
 }

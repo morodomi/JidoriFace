@@ -58,6 +58,7 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -67,6 +68,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import twitter4j.MediaEntity;
+import twitter4j.Query;
+import twitter4j.QueryResult;
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.conf.ConfigurationBuilder;
+
 /**
  * Receives its own events using a listener API designed for foreground activities. Updates a data
  * item every second while it is open. Also allows user to take a photo and send that as an asset to
@@ -74,7 +84,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MainActivity extends Activity implements DataApi.DataListener,
         MessageApi.MessageListener, NodeApi.NodeListener, ConnectionCallbacks,
-        OnConnectionFailedListener {
+        OnConnectionFailedListener, TwitterImage.OnReceiveTwitterImageListener {
 
     private static final String TAG = "MainActivity";
 
@@ -449,7 +459,8 @@ public class MainActivity extends Activity implements DataApi.DataListener,
     }
 
     public void onTakePhotoClick(View view) {
-        dispatchTakePictureIntent();
+        TwitterImage twitterImage = new TwitterImage(this);
+        twitterImage.getImage();
     }
 
     public void onSendPhotoClick(View view) {
@@ -481,4 +492,11 @@ public class MainActivity extends Activity implements DataApi.DataListener,
         }
     }
 
+    public void onReceiveTwitterImage(Bitmap bitmap) {
+        sendPhoto(toAsset(bitmap));
+    }
+
+    public void onFailedTwitterImage(String error) {
+
+    }
 }
